@@ -18,8 +18,8 @@ public class Publisher {
         System.out.println("Connected");
 
         for(int i = 0; i < 1000; i++) {
-            String send = java.time.LocalTime.now().toString();
-            connection.publish("a/b/c", send.getBytes(), QoS.AT_LEAST_ONCE, false);
+            String send = i + " " + java.time.LocalTime.now().toString();
+            connection.publish("a/b/c", send.getBytes(), QoS.EXACTLY_ONCE, false);
         }
 
         connection.disconnect();

@@ -17,33 +17,35 @@ public class Subscriber {
         connection.connect();
 
         // Subscribe to  a/b/c topic
-        Topic[] topics = {new Topic("a/b/c", QoS.AT_LEAST_ONCE)};
+        Topic[] topics = {new Topic("a/b/c", QoS.EXACTLY_ONCE)};
         connection.subscribe(topics);
 
         // Get Ads Messages
         while (true) {
-            Message message = connection.receive();
-            if (message != null) {
-                long messageLatency = calculateMessageLatency(message);
+            Message receivemessage = connection.receive();
+            if (receivemessage != null) {
+                String message = new String(receivemessage.getPayload());
+                String[] split = message.split(" ");
+                long messageLatency = calculateMessageLatency(split[1]);
                 sumOfMessageLatency.addAndGet(messageLatency);
                 listOfMessageLatencyTimes.add(messageLatency);
-                printCurrentResult(sumOfMessageLatency.get(),listOfMessageLatencyTimes.size());
-                message.ack();
+                printCurrentResult(sumOfMessageLatency.get(),listOfMessageLatencyTimes.size(), split[0]);
+                receivemessage.ack();
                 Thread.sleep(500);
             }
         }
     }
 
-    private static long calculateMessageLatency(Message message) {
-        LocalTime sentTime = LocalTime.parse(new String(message.getPayload()));
+    private static long calculateMessageLatency(String message) {
+        LocalTime sentTime = LocalTime.parse(message);
         LocalTime receivedTime = java.time.LocalTime.now();
         return MILLIS.between(sentTime, receivedTime);
     }
 
-    private static void printCurrentResult(long sumOfMessageLatency, int numberOfMessagesReceived){
+    private static void printCurrentResult(long sumOfMessageLatency, int numberOfMessagesReceived, String messageNumber){
         System.out.println("======================");
+        System.out.println("Message number: " + messageNumber);
         System.out.println("Number Of Messages Received : " + numberOfMessagesReceived);
-        System.out.println("Current time: " + java.time.LocalTime.now());
         System.out.println("Total latency : " + sumOfMessageLatency);
         System.out.println("======================\n");
     }
